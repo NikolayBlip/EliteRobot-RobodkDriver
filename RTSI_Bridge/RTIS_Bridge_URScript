@@ -1,0 +1,52 @@
+#*
+#* функциональность этой версии:
+#* - Получение СКАЛИБРОВАННЫХ углов
+#* - Запуск корректной servoj команды
+#* - Ключ старта программы
+#* 
+#* Использует библиотеки:
+#* - math
+#* 
+
+import math
+
+write_output_integer_register(0, 0)
+
+global target_joints #Переменная для бесопасного подхода TCP. Пока не реализовано.
+
+sleep(0.1)
+
+sample_time = 0.008 #(125 Гц)
+lookahead_time = sample_time * 20
+gain = 600
+
+#input_float_register0: 0 = стоп, 1 = работаем
+def checkReg0():
+    reg0 = read_input_float_register(0)
+    if reg0 == 0:
+        return 0
+    else:
+        return 1
+end
+
+write_output_integer_register(0, 1)
+
+while checkReg0() == 0:
+    sync()
+end
+
+while checkReg0() == 1:
+    jtmp = [
+        read_input_float_register(0),
+        read_input_float_register(1),
+        read_input_float_register(2),
+        read_input_float_register(3),
+        read_input_float_register(4),
+        read_input_float_register(5)
+    ]
+    servoj(jtmp, t=sample_time, lookahead_time=lookahead_time, gain=gain)
+end
+
+stopj(3)
+
+write_output_integer_register(0, 0)
